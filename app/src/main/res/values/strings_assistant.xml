@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sc_assistant_short">設定語音助理</string>
+    <string name="sc_assistant_long">設定語音助理（長按電源鍵叫出）</string>
+    <string name="assistant_label">Splinklez 代理人</string>
+</resources>

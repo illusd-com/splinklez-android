@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sc_announce_short">公告</string>
+    <string name="sc_announce_long">查看公告</string>
+    <string name="sc_announce_new">新增公告</string>
+</resources>
