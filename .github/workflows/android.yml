@@ -108,8 +108,9 @@ jobs:
             bt=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
             certs=$("$bt/apksigner" verify --print-certs out/splinklez.apk)
             want=$(echo "$EXPECTED_SHA1" | tr -d ':' | tr 'A-F' 'a-f')
-            got=$(echo "$certs" | sed -nE 's/^Signer #1 certificate SHA-1 digest: ([0-9a-f]+)$/\1/p')
-            if [[ "$got" != "$want" ]]; then echo "::error::signer SHA-1 $got != expected $want"; exit 1; fi
+            got=$(echo "$certs" | grep -ioE 'certificate SHA-1 digest: *[0-9a-f]+' | head -1 | awk '{print $NF}' | tr 'A-F' 'a-f')
+            [[ -n "$got" ]] || { echo "::error::could not parse signer SHA-1"; echo "$certs" | grep -i 'digest' || true; exit 1; }
+            if [[ "$got" != "$want" ]]; then echo "::error::signer SHA-1 '$got' != expected '$want'"; echo "$certs" | grep -i 'digest' || true; exit 1; fi
             echo "Signer SHA-1 OK ($EXPECTED_SHA1)"
           else
             cp app/build/outputs/apk/release/app-release-unsigned.apk out/splinklez-unsigned.apk
