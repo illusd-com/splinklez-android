@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Splinklez</string>
+    <string name="w_desc_air">空氣品質與紫外線</string>
+    <string name="w_desc_oil">本週油價</string>
+    <string name="w_desc_wl">天氣（大）：未來 24 小時、描述與閃電</string>
+    <string name="w_desc_wm">天氣（中）：加上未來 12 小時</string>
+    <string name="w_desc_ws">天氣（小）：溫度與降雨機率</string>
+</resources>

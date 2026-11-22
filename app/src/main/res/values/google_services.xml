@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string translatable="false" name="default_web_client_id">806722648447-l2lvfhdn0vjkrsk2crqs8rr9st1kikim.apps.googleusercontent.com</string>
+    <string translatable="false" name="gcm_defaultSenderId">806722648447</string>
+    <string translatable="false" name="google_api_key">AIzaSyDUda-SSt6q-iKlJ8QC3aa_TSEb8ehdOVY</string>
+    <string translatable="false" name="google_app_id">1:806722648447:android:58b5ec7ee7fcd7e78ac24a</string>
+    <string translatable="false" name="google_crash_reporting_api_key">AIzaSyDUda-SSt6q-iKlJ8QC3aa_TSEb8ehdOVY</string>
+    <string translatable="false" name="google_storage_bucket">splinklez.firebasestorage.app</string>
+    <string translatable="false" name="project_id">splinklez</string>
+</resources>
