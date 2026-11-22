@@ -28,6 +28,7 @@ def source_of(cls):
     return os.path.dirname(top) + "/" + s
 
 final = os.path.join(ROOT, "app/libs/splinklez-1.1.0-recovered.jar")
+os.makedirs(os.path.dirname(final), exist_ok=True)
 out = final + ".tmp"
 kept = dropped = 0
 with zipfile.ZipFile(os.path.join(HERE, "splinklez-1.1.0-classes.jar")) as src, \
