@@ -1,0 +1,9 @@
+{
+  "app/src/main/res/font/plex_mono_medium.ttf": "a9b4c49bb299e05b5f6c481e7fb5e78943d2793249a0c8874ab574a2d1ea6755",
+  "app/src/main/res/font/plex_mono_regular.ttf": "6a3412f058c7d8dfd9170c41e85ade48e5156ecb89356110ca57a0a27734af46",
+  "app/src/main/res/font/unifraktur.ttf": "d64afc0547059dd2e4a78da48bda0aba0a9901be58c7f8c201a8b2b6b4492cc8",
+  "gradle/wrapper/gradle-wrapper.jar": "ad16bca46cb71bb5887c546860d93992aeee35c1fdaf4a242b0a612375d937e0",
+  "recovery/lib/asm-9.8.jar": "876eab6a83daecad5ca67eb9fcabb063c97b5aeb8cf1fca7a989ecde17522051",
+  "recovery/lib/asm-tree-9.8.jar": "14b7880cb7c85eed101e2710432fc3ffb83275532a6a894dc4c4095d49ad59f1",
+  "recovery/splinklez-1.1.0-classes.jar": "964fc86a03e9d7bb84106958366b5c0867a5cac8884a5d82a22382a046305fa0"
+}
