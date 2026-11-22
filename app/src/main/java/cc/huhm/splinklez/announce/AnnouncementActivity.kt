@@ -73,7 +73,7 @@ class AnnouncementActivity : ComponentActivity() {
 
     private fun failed(e: Throwable) {
         col.removeAllViews()
-        header("公告", null, null)
+        header("公告", "返回") { finish() }
         col.addView(ui.text(Speech.friendlyError(e), 15f, ui.palette.dim), ui.lp(top = 20f))
         col.addView(ui.button("再試一次", false) { load() }, ui.lp(ViewGroup.LayoutParams.WRAP_CONTENT, top = 12f))
     }
@@ -93,7 +93,8 @@ class AnnouncementActivity : ComponentActivity() {
 
     private fun showList(list: AnnList) {
         col.removeAllViews()
-        header("公告", null, null)
+        AnnouncementEntry.markOpened(this, list.items.maxOfOrNull { it.createdAt } ?: 0L, list.isAdmin)
+        header("公告", "返回") { finish() }
         if (list.isAdmin) {
             col.addView(ui.button("＋ 新增公告", true) { startActivity(Intent(this, AnnouncementEditActivity::class.java)) },
                 ui.lp(ViewGroup.LayoutParams.WRAP_CONTENT, top = 14f))

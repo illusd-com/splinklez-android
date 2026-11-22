@@ -73,3 +73,14 @@ New, hand-written code only (no jar class touched): `app/src/main/java/cc/huhm/s
 
 Binary files are tracked as base64 in `binaries/` (`tools/binaries.py pack|unpack`, sha256-checked); the real files are
 gitignored. CI (`.github/workflows/android.yml`) runs `unpack`, `build_recovered_jar.py`, unit tests and `assembleRelease`.
+
+## 1.2.2 (versionCode 13): steadier orb, announcement entry
+
+* **Orb.** STT/TTS use cancellable OkHttp calls with retry (`VoiceChat.withRetry`); the answer is spoken in short pieces
+  (`Speech.chunks`, first ≤60 chars) with the next piece fetched while one plays; `AssistantPlayer` waits for the real
+  completion callback, asks for ducking audio focus (USAGE_ASSISTANT) and reports decode/stall errors. Every failure is shown
+  in the caption with a reason; a tap on the orb redoes only the failed step (`Retry.Ask` / `Retry.Speak`). A second
+  invocation frees the mic before recording again (`LevelRecorder` is synchronized). Long-press the orb for a small timing line.
+* **Announcement entry** (`announce/AnnouncementEntry.kt`): a 「公告」 pill (bell, red dot for unread) at the lower right of
+  頭版, overlaid on MainActivity's decor view and driven by the recovered `AppViewModel` state; admins (server `isAdmin`)
+  also get a 「＋」 that opens the editor.
