@@ -54,4 +54,33 @@ class VoiceLogicTest {
         val c = Speech.clip(long, 100)
         assertTrue(c.length <= 100 && c.endsWith("。"))
     }
+
+    @Test fun chunksJoinBackAndStayShort() {
+        val text = "今天台北多雲時晴，氣溫二十度到二十六度。出門記得帶件薄外套！下午有局部短暫陣雨的機會，紫外線指數中等。".repeat(9)
+        val parts = Speech.chunks(text)
+        assertEquals(text, parts.joinToString(""))
+        assertTrue(parts.first().length <= 60)
+        assertTrue(parts.all { it.length <= 152 })
+        // Cuts land after sentence ends.
+        assertTrue(parts.dropLast(1).all { it.last() in "。！？" })
+    }
+
+    @Test fun chunksWithoutPunctuationCutHard() {
+        val text = "一".repeat(400)
+        val parts = Speech.chunks(text)
+        assertEquals(text, parts.joinToString(""))
+        assertTrue(parts.all { it.length <= 150 })
+    }
+
+    @Test fun shortTextIsOnePiece() {
+        assertEquals(listOf("好的。"), Speech.chunks("好的。"))
+        assertEquals(emptyList<String>(), Speech.chunks(""))
+    }
+
+    @Test fun closingQuoteStaysWithSentence() {
+        val text = "他說：「明天會下雨。」" + "後面還有很多字".repeat(12)
+        val parts = Speech.chunks(text, first = 12)
+        assertEquals(text, parts.joinToString(""))
+        assertEquals("他說：「明天會下雨。」", parts.first())
+    }
 }
