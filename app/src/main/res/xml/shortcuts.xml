@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="assistant_setup"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/sc_assistant_short"
+        android:shortcutLongLabel="@string/sc_assistant_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="cc.huhm.splinklez"
+            android:targetClass="cc.huhm.splinklez.assistant.AssistantSetupActivity" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="announcements"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/sc_announce_short"
+        android:shortcutLongLabel="@string/sc_announce_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="cc.huhm.splinklez"
+            android:targetClass="cc.huhm.splinklez.announce.AnnouncementActivity" />
+    </shortcut>
+</shortcuts>

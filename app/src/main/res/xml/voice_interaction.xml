@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<voice-interaction-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:sessionService="cc.huhm.splinklez.assistant.AssistantSessionService"
+    android:recognitionService="cc.huhm.splinklez.assistant.AssistantRecognitionService"
+    android:settingsActivity="cc.huhm.splinklez.assistant.AssistantSetupActivity"
+    android:supportsAssist="true"
+    android:supportsLaunchVoiceAssistFromKeyguard="false"
+    android:supportsLocalInteraction="false" />
