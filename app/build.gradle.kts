@@ -24,8 +24,8 @@ android {
         applicationId = "cc.huhm.splinklez"
         minSdk = 26
         targetSdk = 35
-        versionCode = 15
-        versionName = "1.2.4"
+        versionCode = 16
+        versionName = "1.3.0"
 
         buildConfigField("String", "API_BASE", "\"https://splinklez.huhm.cc\"")
         buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"\"")
@@ -89,6 +89,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("androidx.work:work-runtime-ktx:2.10.1")
     implementation(platform("com.google.firebase:firebase-bom:33.16.0"))
     implementation("com.google.firebase:firebase-messaging")
     implementation("androidx.security:security-crypto:1.1.0-alpha06")

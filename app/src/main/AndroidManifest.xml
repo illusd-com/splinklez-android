@@ -195,6 +195,46 @@
                 android:resource="@xml/widget_oil" />
         </receiver>
 
+        <!-- 1.3.0 颱風路徑潛勢・防災設施地圖・代理人工具・下一班公車小工具 -->
+        <activity
+            android:name=".extras.TyphoonActivity"
+            android:exported="false"
+            android:label="颱風路徑潛勢"
+            android:theme="@android:style/Theme.Material.NoActionBar" />
+        <activity
+            android:name=".extras.FacilitiesActivity"
+            android:exported="true"
+            android:label="@string/sc_fac_short"
+            android:theme="@android:style/Theme.Material.NoActionBar" />
+        <activity
+            android:name=".extras.AgentConnectActivity"
+            android:exported="false"
+            android:label="@string/sc_tools_short"
+            android:theme="@android:style/Theme.Material.NoActionBar"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".widget.BusConfigActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:label="@string/w_label_bus"
+            android:theme="@android:style/Theme.Material.NoActionBar"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+        <receiver
+            android:name=".widget.BusWidget"
+            android:exported="false"
+            android:label="@string/w_label_bus">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_bus" />
+        </receiver>
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.files"
