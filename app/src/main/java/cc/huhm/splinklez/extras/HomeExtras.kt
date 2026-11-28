@@ -48,7 +48,7 @@ import cc.huhm.splinklez.data.Graph
 import cc.huhm.splinklez.data.TyphoonBrief
 import cc.huhm.splinklez.ui.AppViewModel
 import cc.huhm.splinklez.ui.Ink
-import cc.huhm.splinklez.ui.SectionHead
+import cc.huhm.splinklez.ui.SpzHead
 import cc.huhm.splinklez.ui.Tab
 import cc.huhm.splinklez.ui.Type
 import cc.huhm.splinklez.ui.short
@@ -78,8 +78,8 @@ object HomeExtras {
             val ctx = LocalContext.current
             val vm = remember(ctx) { (ctx as? ComponentActivity)?.let { runCatching { ViewModelProvider(it)[AppViewModel::class.java] }.getOrNull() } }
             Column(Modifier.fillMaxWidth().padding(bottom = 18.dp)) {
-                SectionHead("‧", "颱風動態", Modifier, {
-                    Text("防災頁 →", style = Type.Small.copy(color = Ink.Lacquer), modifier = Modifier.clickable { vm?.tab?.value = Tab.Alerts })
+                SpzHead("‧", "颱風動態", {
+                    Text("防災頁 →", style = Type.small.copy(color = Ink.Lacquer), modifier = Modifier.clickable { vm?.tab?.value = Tab.Alerts })
                 })
                 Spacer(Modifier.height(8.dp))
                 active.forEach { t -> StormRow(t) { vm?.tab?.value = Tab.Alerts } }
@@ -100,17 +100,17 @@ object HomeExtras {
             Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)) {
                 val title = if (!t.tyNo.isNullOrBlank()) "第 ${t.tyNo} 號颱風 ${t.name}" else "熱帶性低氣壓 ${t.name}"
-                Text(title, style = Type.SerifBody.copy(fontWeight = FontWeight.Bold))
-                if (t.intlName.isNotBlank() && t.intlName != t.name) Text(t.intlName, style = Type.Small)
+                Text(title, style = Type.serifBody.copy(fontWeight = FontWeight.Bold))
+                if (t.intlName.isNotBlank() && t.intlName != t.name) Text(t.intlName, style = Type.small)
                 val facts = listOfNotNull(
                     t.pressure?.let { "中心氣壓 $it 百帕" },
                     t.wind?.let { "近中心最大風速每秒 $it 公尺" },
                     t.r15?.let { "七級風暴風半徑 $it 公里" },
                 )
-                if (facts.isNotEmpty()) Text(facts.joinToString("・"), style = Type.Body, modifier = Modifier.padding(top = 4.dp))
+                if (facts.isNotEmpty()) Text(facts.joinToString("・"), style = Type.body, modifier = Modifier.padding(top = 4.dp))
                 Text(
                     "位於北緯 ${"%.1f".format(t.lat)}° 東經 ${"%.1f".format(t.lon)}°" + (t.moving?.takeIf { it.isNotBlank() }?.let { "，$it" } ?: "") + "\u3000${short(t.time)} 更新",
-                    style = Type.Small, modifier = Modifier.padding(top = 2.dp),
+                    style = Type.small, modifier = Modifier.padding(top = 2.dp),
                 )
             }
         }
@@ -128,12 +128,12 @@ object HomeExtras {
                 Link("隱私權政策") { openLink(ctx, BuildConfig.API_BASE + "/privacy") }
                 Link("服務條款") { openLink(ctx, BuildConfig.API_BASE + "/terms") }
             }
-            Text("Splinklez ${BuildConfig.VERSION_NAME}", style = Type.Small, modifier = Modifier.padding(top = 8.dp))
+            Text("Splinklez ${BuildConfig.VERSION_NAME}", style = Type.small, modifier = Modifier.padding(top = 8.dp))
         }
     }
 
     @Composable
     private fun Link(label: String, onClick: () -> Unit) {
-        Text(label, style = Type.Small.copy(color = Ink.Ink2), modifier = Modifier.clickable(onClick = onClick).padding(vertical = 6.dp))
+        Text(label, style = Type.small.copy(color = Ink.Ink2), modifier = Modifier.clickable(onClick = onClick).padding(vertical = 6.dp))
     }
 }

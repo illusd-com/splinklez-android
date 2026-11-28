@@ -19,7 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cc.huhm.splinklez.data.Graph
-import cc.huhm.splinklez.ui.SectionHead
+import cc.huhm.splinklez.ui.SpzHead
 import cc.huhm.splinklez.ui.Type
 
 /**
@@ -40,11 +40,11 @@ private fun TyphoonEmptyNote() {
     }
     AnimatedVisibility(state == 1 || state == 3, enter = fadeIn(tween(350)) + expandVertically(tween(400))) {
         Column(Modifier.fillMaxWidth()) {
-            SectionHead("‧", "颱風路徑", Modifier, { Text("中央氣象署", style = Type.Kicker) })
+            SpzHead("‧", "颱風路徑", { Text("中央氣象署", style = Type.kicker) })
             Spacer(Modifier.height(8.dp))
             Text(
                 if (state == 3) "颱風資料暫時讀不到，稍後再試。" else "目前西北太平洋沒有中央氣象署發布路徑的熱帶性低氣壓或颱風。",
-                style = Type.SerifBody,
+                style = Type.serifBody,
             )
             Spacer(Modifier.height(14.dp))
         }

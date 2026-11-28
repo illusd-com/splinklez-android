@@ -88,7 +88,7 @@ fun CivicBand(
     Column(Modifier.fillMaxWidth()) {
         HomeExtras.TyphoonHome()
         if (visible.isNotEmpty()) {
-            Kicker("生活資訊", "$city\u3000可在設定裡開關各張卡片")
+            SpzKicker("生活資訊", "$city\u3000可在設定裡開關各張卡片")
             Spacer(Modifier.height(10.dp))
             visible.forEachIndexed { i, id ->
                 Rise(index = i) { CivicCard(id, city, data[id], onQuery) }
@@ -129,8 +129,8 @@ private fun CivicCard(id: String, city: String, raw: JSONObject?, onQuery: (Stri
     val label = HOME_CARDS.firstOrNull { it.id == id }?.label ?: id
     val state = stateOf(label, raw)
     val aside = (state as? CardState.Ready)?.j?.let { asideOf(id, city, it) }.orEmpty()
-    SectionHead("‧", label, Modifier, {
-        if (aside.isNotBlank()) Text(aside, style = Type.Kicker, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    SpzHead("‧", label, {
+        if (aside.isNotBlank()) Text(aside, style = Type.kicker, maxLines = 1, overflow = TextOverflow.Ellipsis)
     })
     Spacer(Modifier.height(8.dp))
     val searchable = id in SEARCH_KINDS
@@ -147,7 +147,7 @@ private fun CivicCard(id: String, city: String, raw: JSONObject?, onQuery: (Stri
     ) { s ->
         when (s) {
             CardState.Loading -> Shimmer()
-            is CardState.Failed -> Unavailable(s.title, s.message, Modifier)
+            is CardState.Failed -> SpzUnavailable(s.title, s.message)
             is CardState.Ready -> Column(Modifier.fillMaxWidth()) { Body(id, city, s.j) }
         }
     }
@@ -187,25 +187,25 @@ private fun Body(id: String, city: String, d: JSONObject) {
             if (a == null) Lead("${city}目前沒有測站資料。")
             else Row(verticalAlignment = Alignment.CenterVertically) {
                 val aqi = a.optDouble("aqi")
-                if (aqi.isNaN()) Text("–", style = Type.Num.copy(fontSize = 40.sp))
-                else AnimatedNumber(aqi, Type.Num.copy(fontSize = 40.sp, fontWeight = FontWeight.Bold), 0, aqiColor(aqi), Modifier)
+                if (aqi.isNaN()) Text("–", style = Type.num.copy(fontSize = 40.sp))
+                else SpzCountUp(aqi, Type.num.copy(fontSize = 40.sp, fontWeight = FontWeight.Bold), 0, aqiColor(aqi))
                 Spacer(Modifier.width(14.dp))
                 Column {
-                    Text("${a.str("site")}站", style = Type.Kicker)
-                    Text(a.str("level").ifBlank { a.str("status") }, style = Type.SerifBody.copy(fontWeight = FontWeight.Bold))
+                    Text("${a.str("site")}站", style = Type.kicker)
+                    Text(a.str("level").ifBlank { a.str("status") }, style = Type.serifBody.copy(fontWeight = FontWeight.Bold))
                     val pol = a.str("pollutant").takeIf { it.isNotBlank() }?.let { "，污染物 $it" }.orEmpty()
-                    Text("PM2.5 ${a.num("pm25", 0)}、臭氧 ${a.num("o3", 0)}$pol", style = Type.Small)
+                    Text("PM2.5 ${a.num("pm25", 0)}、臭氧 ${a.num("o3", 0)}$pol", style = Type.small)
                 }
             }
             d.optJSONObject("uv")?.let { uv ->
                 Spacer(Modifier.height(8.dp))
-                Text("紫外線 ${uv.str("site")}\u3000指數 ${uv.num("uvi", 0)}", style = Type.Body)
+                Text("紫外線 ${uv.str("site")}\u3000指數 ${uv.num("uvi", 0)}", style = Type.body)
             }
         }
         "outage" -> {
             val power = d.objs("power")
             val water = d.objs("water")
-            Text("計畫性停電", style = Type.Kicker)
+            Text("計畫性停電", style = Type.kicker)
             Spacer(Modifier.height(4.dp))
             if (power.isEmpty()) Lead(if (d.optBoolean("powerStale")) "目前沒有尚未結束的計畫性停電。" else "${city}目前沒有即將開始的計畫性停電。")
             else Rows(power.take(4).map { p ->
@@ -214,21 +214,21 @@ private fun Body(id: String, city: String, d: JSONObject) {
                     (areas.take(3).joinToString("、") + (if (areas.size > 3) " 等" else "") + "\u3000" + p.str("work"))
             })
             Spacer(Modifier.height(10.dp))
-            Text("停水／降壓", style = Type.Kicker)
+            Text("停水／降壓", style = Type.kicker)
             Spacer(Modifier.height(4.dp))
             val note = d.str("waterNote")
             if (water.isEmpty()) Lead("${city}目前沒有停水或降壓公告。" + if (note.isNotBlank()) " $note" else "")
             else {
                 Rows(water.take(4).map { w -> "${w.str("kind")}\u3000${w.str("town")}${w.str("area")}" to "${w.str("start")} 起，預計 ${w.str("restore")} 恢復。${w.str("reason")}" })
-                if (note.isNotBlank()) Text(note, style = Type.Small)
+                if (note.isNotBlank()) Text(note, style = Type.small)
             }
-            Text("查詢電話：台電 1911、台水 1910。", style = Type.Small, modifier = Modifier.padding(top = 6.dp))
+            Text("查詢電話：台電 1911、台水 1910。", style = Type.small, modifier = Modifier.padding(top = 6.dp))
         }
         "reservoir" -> {
             val items = d.objs("items")
             if (items.isEmpty()) Lead("目前沒有水庫資料。")
             items.take(8).forEachIndexed { i, r -> ReservoirRow(i, r) }
-            d.str("note").takeIf { it.isNotBlank() }?.let { Text(it, style = Type.Small, modifier = Modifier.padding(top = 6.dp)) }
+            d.str("note").takeIf { it.isNotBlank() }?.let { Text(it, style = Type.small, modifier = Modifier.padding(top = 6.dp)) }
         }
         "oil" -> {
             val items = d.objs("items")
@@ -236,11 +236,11 @@ private fun Body(id: String, city: String, d: JSONObject) {
             else Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 items.take(4).forEachIndexed { i, o ->
                     Column(Modifier.weight(1f).staggerRow(i)) {
-                        Text(o.str("name").replace("汽油", "").replace("無鉛", "無鉛 "), style = Type.Small, maxLines = 1)
+                        Text(o.str("name").replace("汽油", "").replace("無鉛", "無鉛 "), style = Type.small, maxLines = 1)
                         val price = o.optDouble("price")
-                        if (price.isNaN()) Text("–", style = Type.Num)
-                        else AnimatedNumber(price, Type.Num.copy(fontSize = 20.sp, fontWeight = FontWeight.Bold), 1, Ink.Ink, Modifier)
-                        Text("元／公升", style = Type.Small.copy(fontSize = 10.sp))
+                        if (price.isNaN()) Text("–", style = Type.num)
+                        else SpzCountUp(price, Type.num.copy(fontSize = 20.sp, fontWeight = FontWeight.Bold), 1, Ink.Ink)
+                        Text("元／公升", style = Type.small.copy(fontSize = 10.sp))
                     }
                 }
             }
@@ -341,14 +341,14 @@ private fun SearchCard(kind: String, city: String, raw: JSONObject?, state: Card
             onValueChange = { q = it },
             modifier = Modifier.weight(1f).padding(vertical = 4.dp)
                 .border(1.dp, Ink.Hair, RoundedCornerShape(8.dp)).padding(horizontal = 10.dp, vertical = 9.dp),
-            textStyle = Type.Body,
+            textStyle = Type.body,
             singleLine = true,
             cursorBrush = SolidColor(Ink.Lacquer),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             keyboardActions = KeyboardActions(onSearch = { run() }),
             decorationBox = { inner ->
                 Box {
-                    if (q.isEmpty()) Text(placeholderOf(kind, mode), style = Type.Small, maxLines = 1)
+                    if (q.isEmpty()) Text(placeholderOf(kind, mode), style = Type.small, maxLines = 1)
                     inner()
                 }
             },
@@ -365,7 +365,7 @@ private fun SearchCard(kind: String, city: String, raw: JSONObject?, state: Card
     ) { s ->
         when (s) {
             CardState.Loading -> if (raw == null || pending) Shimmer(lines = 2) else Column {}
-            is CardState.Failed -> Unavailable(s.title, s.message, Modifier)
+            is CardState.Failed -> SpzUnavailable(s.title, s.message)
             is CardState.Ready -> Column(Modifier.fillMaxWidth()) {
                 val d = s.j
                 val list = searchRows(kind, d)
@@ -402,7 +402,7 @@ private fun fallbackRows(d: JSONObject): List<Pair<String, String>> {
 
 @Composable
 private fun Lead(text: String) {
-    Text(text, style = Type.SerifBody, modifier = Modifier.padding(vertical = 2.dp))
+    Text(text, style = Type.serifBody, modifier = Modifier.padding(vertical = 2.dp))
 }
 
 @Composable
@@ -410,8 +410,8 @@ private fun Rows(rows: List<Pair<String, String>>, mono: Boolean = false) {
     Column(Modifier.fillMaxWidth()) {
         rows.forEachIndexed { i, (a, b) ->
             Column(Modifier.fillMaxWidth().staggerRow(i).padding(vertical = 5.dp)) {
-                Text(a, style = Type.Body.copy(fontWeight = FontWeight.Bold))
-                if (b.isNotBlank()) Text(b, style = if (mono) Type.Num else Type.Small)
+                Text(a, style = Type.body.copy(fontWeight = FontWeight.Bold))
+                if (b.isNotBlank()) Text(b, style = if (mono) Type.num else Type.small)
             }
             if (i < rows.size - 1) Box(Modifier.fillMaxWidth().height(1.dp).background(Ink.Hair))
         }
@@ -432,7 +432,7 @@ private fun Modifier.staggerRow(i: Int): Modifier {
 @Composable
 private fun Source(text: String) {
     if (text.isBlank()) return
-    Text("來源：$text", style = Type.Small.copy(fontSize = 11.sp), modifier = Modifier.padding(top = 6.dp))
+    Text("來源：$text", style = Type.small.copy(fontSize = 11.sp), modifier = Modifier.padding(top = 6.dp))
 }
 
 @Composable
@@ -443,19 +443,19 @@ private fun ReservoirRow(i: Int, r: JSONObject) {
     val f by animateFloatAsState(if (go) ((pct ?: 0.0) / 100.0).toFloat().coerceIn(0f, 1f) else 0f, tween(700, easing = EASE), label = "res")
     Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         val local = r.optBoolean("highlight")
-        Text(r.str("name") + if (local) "・本地" else "", style = Type.Body.copy(fontWeight = if (local) FontWeight.Bold else FontWeight.Normal), modifier = Modifier.width(96.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(r.str("name") + if (local) "・本地" else "", style = Type.body.copy(fontWeight = if (local) FontWeight.Bold else FontWeight.Normal), modifier = Modifier.width(96.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
         Box(Modifier.weight(1f).height(8.dp).clip(RoundedCornerShape(4.dp)).background(Ink.Hair)) {
             Box(Modifier.fillMaxWidth(f).height(8.dp).clip(RoundedCornerShape(4.dp)).background(if ((pct ?: 100.0) < 30) Ink.Up else Ink.Lacquer))
         }
-        Text(pct?.let { String.format("%.1f%%", it) } ?: "–", style = Type.Num, modifier = Modifier.width(64.dp).padding(start = 8.dp))
+        Text(pct?.let { String.format("%.1f%%", it) } ?: "–", style = Type.num, modifier = Modifier.width(64.dp).padding(start = 8.dp))
     }
 }
 
 @Composable
 private fun FxRow(a: String, b: String, c: String, d: String, e: String, head: Boolean = false) {
-    val st = if (head) Type.Small else Type.Num.copy(fontSize = 13.sp)
+    val st = if (head) Type.small else Type.num.copy(fontSize = 13.sp)
     Row(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-        Text(a, style = if (head) Type.Small else Type.Body.copy(fontSize = 13.sp), modifier = Modifier.weight(1.4f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(a, style = if (head) Type.small else Type.body.copy(fontSize = 13.sp), modifier = Modifier.weight(1.4f), maxLines = 1, overflow = TextOverflow.Ellipsis)
         listOf(b, c, d, e).forEach { Text(it, style = st, modifier = Modifier.weight(1f), maxLines = 1) }
     }
 }
@@ -469,7 +469,7 @@ internal fun PressChip(label: String, selected: Boolean, onClick: () -> Unit) {
     val shape = RoundedCornerShape(16.dp)
     Text(
         label,
-        style = Type.Small.copy(fontWeight = FontWeight.Bold, color = if (selected) Ink.Lacquer else Ink.Ink2),
+        style = Type.small.copy(fontWeight = FontWeight.Bold, color = if (selected) Ink.Lacquer else Ink.Ink2),
         modifier = Modifier
             .graphicsLayer { scaleX = s; scaleY = s }
             .clip(shape)
@@ -494,7 +494,7 @@ internal fun Shimmer(lines: Int = 3) {
             )
             Spacer(Modifier.height(8.dp))
         }
-        Text("讀取中…", style = Type.Small)
+        Text("讀取中…", style = Type.small)
     }
 }
 
