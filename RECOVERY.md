@@ -84,3 +84,19 @@ gitignored. CI (`.github/workflows/android.yml`) runs `unpack`, `build_recovered
 * **Announcement entry** (`announce/AnnouncementEntry.kt`): a 「公告」 pill (bell, red dot for unread) at the lower right of
   頭版, overlaid on MainActivity's decor view and driven by the recovered `AppViewModel` state; admins (server `isAdmin`)
   also get a 「＋」 that opens the editor.
+
+## 1.2.3 (versionCode 14): web parity on 頭版, empty states, motion, push dedupe
+
+* **`ui/CivicBand.kt` is now source** (the recovered `CivicBandKt` is dropped from the jar). Same public JVM API that the
+  recovered HomeScreen/HomeViewModel call: `CivicBand(String, Map, Map, Function3, Composer, int)` and `getCIVIC_HOME_IDS()`.
+  Every card mirrors the website card (fields and wording) with explicit states: shimmer while loading, 「…暫時讀不到」,
+  「…目前沒有…」 empty states, then data. Traffic gets 公車/台鐵/高鐵 chips. Motion: staggered rise-in, cross-fade on load,
+  row stagger, reservoir bars fill, press-scale chips.
+* **`extras/HomeExtras.kt`**: 颱風動態 card at the top of the band while a storm is fresh (< 18 h, like the web), and footer
+  links (公告, 更新日誌, 隱私權政策, 服務條款). **`announce/UpdateLogActivity.kt`** reads `/api/updatelog`.
+* **AlertsScreen hook** (`VersionPatch.hookAlerts`, ASM): inserts `AlertsExtrasKt.typhoonEmpty(LazyListScope)` before the
+  block after the typhoon blocks (key `-299545250` in `AlertsScreen$lambda$24$0$0`), so 防災 says 「目前西北太平洋沒有…」 when
+  there is no storm. The build fails unless exactly one hook is applied.
+* **Push**: `Push.sync` re-registers at least every 12 h and whenever the signed-in account changes (`Push.watchSession` from
+  `SplinklezApp`), and unlinks the token if notifications are blocked. The server skips web push for accounts with a live
+  Android token.
