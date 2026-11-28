@@ -110,3 +110,20 @@ gitignored. CI (`.github/workflows/android.yml`) runs `unpack`, `build_recovered
   show 讀取中 forever. They now start as a search prompt. Every other card that has no answer after 15 s shows 讀取逾時 + 重試.
 * 國道路況: year < 1990 timestamps are dropped, ISO times become `M/d HH:mm`, same-title incidents group into one row (共 N 則).
 * `CivicBand` ends with 120 dp of space so the floating ＋ / 公告 buttons never cover the last card.
+
+## 1.3.0 (versionCode 16): typhoon probability, facility map, bus widget, agent connectors
+
+All new UI is plain Kotlin under `extras/` and `widget/`; the recovered jar is untouched.
+
+* `extras/Net.kt`: small OkHttp JSON GET with a hard timeout (15 s default) and friendly errors; county-seat coordinates.
+* `extras/WebPane.kt`: vertical spinner → note → WebView with a 20 s timeout + 重試; only the site's own host loads inside;
+  `signedIn = true` copies the app session into the site's `spz_session` cookie.
+* `TyphoonActivity`: `/typhoon?embed=1` map (only while a storm has a fresh fix) + native township list from
+  `/api/alerts/typhoon/prob?county=`. Explicit empty state when CWA publishes nothing.
+* `FacilitiesActivity`: `/facilities?embed=1` map (Leaflet/OSM) above a native nearest-list from `/api/facilities`
+  (shelters 消防署, AED 衛福部, toilets 環境部). Coarse location, rounded to 3 decimals; falls back to the chosen city.
+* `AgentConnectActivity`: `/agent?tab=connect&embed=1` signed in. Write-type tool calls wait for 執行/取消 there — the
+  recovered native chat ignores the new `tool_confirm` stream event.
+* `widget/BusWidget` + `BusConfigActivity`: RemoteViews widget (vertical rows only), per-widget stop in SharedPreferences,
+  WorkManager refresh every ~15 min, tap to refresh, keeps last good lines when offline. Data `/api/bus/*` (TDX server-side).
+* 防災 tab gets two entry rows (AlertsExtras), 頭版 footer gets 颱風潛勢・防災設施・代理人工具, launcher shortcut 防災設施.

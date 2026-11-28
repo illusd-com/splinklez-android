@@ -128,6 +128,11 @@ object HomeExtras {
                 Link("隱私權政策") { openLink(ctx, BuildConfig.API_BASE + "/privacy") }
                 Link("服務條款") { openLink(ctx, BuildConfig.API_BASE + "/terms") }
             }
+            Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                Link("颱風潛勢") { ctx.startActivity(Intent(ctx, TyphoonActivity::class.java)) }
+                Link("防災設施") { ctx.startActivity(Intent(ctx, FacilitiesActivity::class.java)) }
+                Link("代理人工具") { ctx.startActivity(Intent(ctx, AgentConnectActivity::class.java)) }
+            }
             Text("Splinklez ${BuildConfig.VERSION_NAME}", style = Type.small, modifier = Modifier.padding(top = 8.dp))
         }
     }
