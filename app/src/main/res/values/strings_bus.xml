@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="w_desc_bus">下一班公車：選一個站牌，看到站時間</string>
+    <string name="w_label_bus">下一班公車</string>
+    <string name="sc_tools_short">代理人工具</string>
+    <string name="sc_tools_long">代理人自訂工具與 MCP</string>
+    <string name="sc_fac_short">防災設施</string>
+    <string name="sc_fac_long">防災設施地圖</string>
+</resources>
