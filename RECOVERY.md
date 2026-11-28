@@ -127,3 +127,20 @@ All new UI is plain Kotlin under `extras/` and `widget/`; the recovered jar is u
 * `widget/BusWidget` + `BusConfigActivity`: RemoteViews widget (vertical rows only), per-widget stop in SharedPreferences,
   WorkManager refresh every ~15 min, tap to refresh, keeps last good lines when offline. Data `/api/bus/*` (TDX server-side).
 * 防災 tab gets two entry rows (AlertsExtras), 頭版 footer gets 颱風潛勢・防災設施・代理人工具, launcher shortcut 防災設施.
+
+## 1.3.1 (versionCode 17): 自動定位
+
+New Kotlin under `location/`; the recovered jar is untouched (it only calls the public `HomeViewModel.pickCity` and reads `Prefs.city`).
+
+* `AutoLocate`: on every MainActivity resume and after sign-in it gets one fix (`LocationManager`: FUSED on API 31+, NETWORK, then GPS when
+  FINE is granted; `getCurrentLocation` on API 30+, `requestSingleUpdate` before; ~14 s overall, then the last known fix if < 3 h old),
+  rounds it to 0.01° and asks `/api/sensors/locate` (NLSC, session-authenticated, returns 縣市＋鄉鎮區 text only; nothing stored server-side).
+  The result is saved on the phone as text + time, drives 頭版 (`HomeViewModel.pickCity`, or `Prefs.city` + widgets when no UI) and,
+  for phones with push registered, PUTs `county` to `/api/alerts/prefs` so alerts follow the 縣市. A manual city survives a resume; it is
+  replaced when the 縣市 changes or on 「重新定位」.
+* `LocateWorker`: WorkManager `PeriodicWorkRequest` (1 h, network required), scheduled only while 自動定位 is on and
+  ACCESS_BACKGROUND_LOCATION is granted (Android 10+); silent on failure.
+* `LocateLine` (Compose, top of `CivicBand`, vertical stack): 定位中 / 已自動定位：縣市區・HH:mm (tap = relocate) / 失敗＋原因＋重試 /
+  關閉 / inline permission ask / inline 「一律允許」 hint. `LocateHooks` registers the permission launchers in `onActivityCreated`,
+  relocates on resume and shows a small 「開啟自動定位」 chip at the lower left of 頭版 while the permission is still unanswered.
+* Manifest: ACCESS_FINE_LOCATION, ACCESS_BACKGROUND_LOCATION, `uses-feature location/gps required=false`.
