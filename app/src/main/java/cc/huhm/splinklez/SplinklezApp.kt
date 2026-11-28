@@ -2,6 +2,7 @@ package cc.huhm.splinklez
 
 import android.app.Application
 import cc.huhm.splinklez.alerts.Notifier
+import cc.huhm.splinklez.alerts.Push
 import cc.huhm.splinklez.announce.AnnouncementEntry
 import cc.huhm.splinklez.announce.AnnouncementPopup
 import cc.huhm.splinklez.data.Graph
@@ -13,5 +14,6 @@ class SplinklezApp : Application() {
         Notifier.ensureChannels(this)
         AnnouncementPopup.install(this)
         AnnouncementEntry.install(this)
+        Push.watchSession(this)
     }
 }

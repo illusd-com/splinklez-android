@@ -77,6 +77,12 @@
             android:exported="true"
             android:label="@string/sc_announce_short"
             android:theme="@android:style/Theme.Material.NoActionBar" />
+        <!-- 1.2.3 更新日誌 -->
+        <activity
+            android:name=".announce.UpdateLogActivity"
+            android:exported="false"
+            android:label="更新日誌"
+            android:theme="@android:style/Theme.Material.NoActionBar" />
         <activity
             android:name=".announce.AnnouncementEditActivity"
             android:exported="false"
