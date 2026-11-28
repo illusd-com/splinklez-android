@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cc.huhm.splinklez.data.HOME_CARDS
 import cc.huhm.splinklez.extras.HomeExtras
+import cc.huhm.splinklez.location.LocateLine
 import kotlinx.coroutines.delay
 import org.json.JSONArray
 import org.json.JSONObject
@@ -86,6 +87,7 @@ fun CivicBand(
 ) {
     val visible = CIVIC_HOME_IDS.filter { cards[it] != false }
     Column(Modifier.fillMaxWidth()) {
+        LocateLine()
         HomeExtras.TyphoonHome()
         if (visible.isNotEmpty()) {
             SpzKicker("生活資訊", "$city\u3000可在設定裡開關各張卡片")

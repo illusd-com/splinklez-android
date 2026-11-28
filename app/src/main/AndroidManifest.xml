@@ -9,8 +9,13 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <!-- 「用目前位置」只需要粗略定位（城市／區），不用精確 GPS -->
+    <!-- 自動定位只用大約位置（縣市／區）：座標先四捨五入到約 1 公里才送出，伺服器不儲存。
+         背景定位只用在每小時一次的更新；沒給的話仍會在開啟 App 時定位。 -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <uses-feature android:name="android.hardware.location" android:required="false" />
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
     <uses-feature android:name="android.hardware.microphone" android:required="false" />
 
     <application
