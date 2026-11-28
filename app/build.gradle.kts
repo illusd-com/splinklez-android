@@ -24,8 +24,8 @@ android {
         applicationId = "cc.huhm.splinklez"
         minSdk = 26
         targetSdk = 35
-        versionCode = 14
-        versionName = "1.2.3"
+        versionCode = 15
+        versionName = "1.2.4"
 
         buildConfigField("String", "API_BASE", "\"https://splinklez.huhm.cc\"")
         buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"\"")

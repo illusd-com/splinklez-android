@@ -100,3 +100,13 @@ gitignored. CI (`.github/workflows/android.yml`) runs `unpack`, `build_recovered
 * **Push**: `Push.sync` re-registers at least every 12 h and whenever the signed-in account changes (`Push.watchSession` from
   `SplinklezApp`), and unlinks the token if notifications are blocked. The server skips web push for accounts with a live
   Android token.
+
+## 1.2.4 (versionCode 15): CivicBand layout fix
+
+* Cause of the overlap: `CivicCard` emitted head, spacer and body as three siblings inside `Rise`, which is a `Box`, so they were
+  all drawn at the same top-left. `CivicCard` now wraps them in one `Column`. `SpzHead` puts the aside (更新時間、城市…) on its own
+  line under the title, so a long aside can no longer squeeze the title into two lines.
+* `HomeViewModel.loadCivic` pre-fills every card with `null` but never fetches `traffic` and `medical`; those two cards used to
+  show 讀取中 forever. They now start as a search prompt. Every other card that has no answer after 15 s shows 讀取逾時 + 重試.
+* 國道路況: year < 1990 timestamps are dropped, ISO times become `M/d HH:mm`, same-title incidents group into one row (共 N 則).
+* `CivicBand` ends with 120 dp of space so the floating ＋ / 公告 buttons never cover the last card.

@@ -96,6 +96,8 @@ fun CivicBand(
             }
         }
         HomeExtras.FooterLinks()
+        // The floating ＋ and 公告 buttons sit over the bottom of the page; let the last card scroll above them.
+        Spacer(Modifier.height(120.dp))
     }
 }
 
@@ -120,35 +122,60 @@ private fun stateOf(label: String, j: JSONObject?): CardState {
     if (j == null) return CardState.Loading
     val failed = (j.has("ok") && !j.optBoolean("ok")) || j.optString("error").isNotBlank() || j.optBoolean("unavailable")
     if (!failed) return CardState.Ready(j)
-    val msg = j.optString("message").ifBlank { j.optString("error") }.ifBlank { "資料暫時讀不到，稍後再試。" }
-    return CardState.Failed(if (j.optBoolean("unavailable")) "${label}還沒接上" else "${label}暫時讀不到", msg)
+    val raw = j.optString("message").ifBlank { j.optString("error") }
+    val title = if (j.optBoolean("unavailable")) "${label}還沒接上" else "${label}暫時讀不到"
+    // The server's fallback text is often the same sentence as the title; say something new instead of repeating it.
+    val same = raw.isBlank() || raw == title || raw.replace("暫時讀不到", "").trim() == label || raw.startsWith(label) && raw.endsWith("暫時讀不到")
+    return CardState.Failed(title, if (same) "稍後再試，或點「重試」。" else raw)
 }
 
 @Composable
 private fun CivicCard(id: String, city: String, raw: JSONObject?, onQuery: (String, String, String?) -> Unit) {
     val label = HOME_CARDS.firstOrNull { it.id == id }?.label ?: id
-    val state = stateOf(label, raw)
-    val aside = (state as? CardState.Ready)?.j?.let { asideOf(id, city, it) }.orEmpty()
-    SpzHead("‧", label, {
-        if (aside.isNotBlank()) Text(aside, style = Type.kicker, maxLines = 1, overflow = TextOverflow.Ellipsis)
-    })
-    Spacer(Modifier.height(8.dp))
     val searchable = id in SEARCH_KINDS
-    if (searchable) {
-        // The search box stays put while results come and go.
-        SearchCard(id, city, raw, state, onQuery)
-        return
+    // Cards that only load on demand (the old view model never fetches these two up front) start as an input prompt.
+    val onDemand = id == "traffic" || id == "medical"
+    var retrying by remember { mutableStateOf(false) }
+    var timedOut by remember { mutableStateOf(false) }
+    LaunchedEffect(raw) { retrying = false; timedOut = false }
+    val waiting = (raw == null && !onDemand) || retrying
+    // Loading must always resolve: after 15 s without an answer the card shows a retry instead of a spinner.
+    LaunchedEffect(waiting, raw, retrying) {
+        timedOut = false
+        if (waiting) { delay(15_000); timedOut = true }
     }
-    AnimatedContent(
-        targetState = state,
-        contentKey = { it::class },
-        transitionSpec = { (fadeIn(tween(320, 60)) + slideInVertically(tween(320, 60, EASE)) { it / 8 }) togetherWith fadeOut(tween(160)) },
-        label = "civic-$id",
-    ) { s ->
-        when (s) {
-            CardState.Loading -> Shimmer()
-            is CardState.Failed -> SpzUnavailable(s.title, s.message)
-            is CardState.Ready -> Column(Modifier.fillMaxWidth()) { Body(id, city, s.j) }
+    val base = if (onDemand && raw == null) CardState.Ready(JSONObject()) else stateOf(label, raw)
+    val state: CardState = when {
+        waiting && timedOut -> CardState.Failed("${label}讀取逾時", "伺服器回應太慢。")
+        retrying -> CardState.Loading
+        else -> base
+    }
+    val aside = (state as? CardState.Ready)?.j?.let { asideOf(id, city, it) }.orEmpty()
+    val retry: () -> Unit = {
+        retrying = true; timedOut = false
+        onQuery(id, "", if (id == "freeway") "freeway" else null)
+    }
+    // One Column: head, then body, stacked top to bottom (the Rise wrapper is a Box, so nothing here may be a sibling).
+    Column(Modifier.fillMaxWidth()) {
+        SpzHead("‧", label, aside)
+        Spacer(Modifier.height(8.dp))
+        if (searchable) {
+            // The search box stays put while results come and go.
+            SearchCard(id, city, raw, state, retry, onQuery)
+        } else {
+            AnimatedContent(
+                targetState = state,
+                contentKey = { it::class },
+                transitionSpec = { (fadeIn(tween(320, 60)) + slideInVertically(tween(320, 60, EASE)) { it / 8 }) togetherWith fadeOut(tween(160)) },
+                label = "civic-$id",
+                modifier = Modifier.fillMaxWidth(),
+            ) { s ->
+                when (s) {
+                    CardState.Loading -> Shimmer()
+                    is CardState.Failed -> SpzUnavailable(s.title, s.message, retry)
+                    is CardState.Ready -> Column(Modifier.fillMaxWidth()) { Body(id, city, s.j) }
+                }
+            }
         }
     }
 }
@@ -190,7 +217,7 @@ private fun Body(id: String, city: String, d: JSONObject) {
                 if (aqi.isNaN()) Text("–", style = Type.num.copy(fontSize = 40.sp))
                 else SpzCountUp(aqi, Type.num.copy(fontSize = 40.sp, fontWeight = FontWeight.Bold), 0, aqiColor(aqi))
                 Spacer(Modifier.width(14.dp))
-                Column {
+                Column(Modifier.weight(1f)) {
                     Text("${a.str("site")}站", style = Type.kicker)
                     Text(a.str("level").ifBlank { a.str("status") }, style = Type.serifBody.copy(fontWeight = FontWeight.Bold))
                     val pol = a.str("pollutant").takeIf { it.isNotBlank() }?.let { "，污染物 $it" }.orEmpty()
@@ -317,12 +344,17 @@ private fun placeholderOf(kind: String, mode: String) = when (kind) {
 }
 
 @Composable
-private fun SearchCard(kind: String, city: String, raw: JSONObject?, state: CardState, onQuery: (String, String, String?) -> Unit) {
+private fun SearchCard(kind: String, city: String, raw: JSONObject?, state: CardState, retry: () -> Unit, onQuery: (String, String, String?) -> Unit) {
     var q by rememberSaveable(kind) { mutableStateOf("") }
     var mode by rememberSaveable(kind) { mutableStateOf(if (kind == "freeway") "freeway" else "tra") }
     var pending by remember { mutableStateOf(false) }
     var asked by rememberSaveable(kind) { mutableStateOf(false) }
-    LaunchedEffect(raw) { pending = false }
+    var pendingTimedOut by remember { mutableStateOf(false) }
+    LaunchedEffect(raw) { pending = false; pendingTimedOut = false }
+    LaunchedEffect(pending) {
+        pendingTimedOut = false
+        if (pending) { delay(15_000); pendingTimedOut = true }
+    }
     fun run(m: String = mode) {
         pending = true; asked = true
         onQuery(kind, q.trim(), if (kind == "traffic" || kind == "freeway") m else null)
@@ -358,14 +390,19 @@ private fun SearchCard(kind: String, city: String, raw: JSONObject?, state: Card
     }
     Spacer(Modifier.height(6.dp))
     AnimatedContent(
-        targetState = if (pending) CardState.Loading else state,
+        targetState = when {
+            pending && pendingTimedOut -> CardState.Failed("查詢逾時", "伺服器回應太慢。")
+            pending -> CardState.Loading
+            else -> state
+        },
         contentKey = { s -> if (s is CardState.Ready) System.identityHashCode(s.j) else s::class.hashCode() },
         transitionSpec = { (fadeIn(tween(300, 40)) + slideInVertically(tween(300, 40, EASE)) { it / 10 }) togetherWith fadeOut(tween(140)) },
         label = "search-$kind",
+        modifier = Modifier.fillMaxWidth(),
     ) { s ->
         when (s) {
-            CardState.Loading -> if (raw == null || pending) Shimmer(lines = 2) else Column {}
-            is CardState.Failed -> SpzUnavailable(s.title, s.message)
+            CardState.Loading -> Shimmer(lines = 2)
+            is CardState.Failed -> SpzUnavailable(s.title, s.message, if (pending) ({ run() }) else retry)
             is CardState.Ready -> Column(Modifier.fillMaxWidth()) {
                 val d = s.j
                 val list = searchRows(kind, d)
@@ -388,8 +425,35 @@ private fun searchRows(kind: String, d: JSONObject): List<Pair<String, String>> 
         p.str("name") to listOf(p.str("area"), avail, p.str("fee")).filter { it.isNotBlank() }.joinToString("\u3000")
     }
     "medical" -> d.objs("places").map { p -> p.str("name") to listOf(p.str("type"), p.str("address"), p.str("phone")).filter { it.isNotBlank() }.joinToString("\u3000") }
-    else -> d.objs("rows").map { r -> r.str("title") to listOf(r.str("subtitle"), r.str("eta"), r.str("extra")).filter { it.isNotBlank() }.joinToString("\u3000") }
+    "freeway" -> groupIncidents(d.objs("rows"))
+    else -> d.objs("rows").map { r -> r.str("title") to listOf(cleanTimes(r.str("subtitle")), r.str("eta"), r.str("extra")).filter { it.isNotBlank() }.joinToString("\u3000") }
 }.filter { it.first.isNotBlank() }
+
+private val ISO_AT = Regex("""\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})?""")
+
+/** An upstream "no time" value such as 0001-01-01T00:00:00+08:06 is dropped; real ISO times become M/d HH:mm. */
+internal fun cleanTimes(text: String): String =
+    ISO_AT.replace(text) { m ->
+        val year = m.value.take(4).toIntOrNull() ?: 0
+        if (year < 1990) "" else short(m.value)
+    }.split('\u3000', ' ').map { it.trim() }.filter { it.isNotBlank() }.joinToString("\u3000")
+
+/** Same incident posted many times (e.g. 機動開放路局事件) becomes one row: title, 共 N 則, the roads it touches, latest time. */
+private fun groupIncidents(rows: List<JSONObject>): List<Pair<String, String>> {
+    val groups = LinkedHashMap<String, MutableList<JSONObject>>()
+    rows.forEach { r -> r.str("title").trim().takeIf { it.isNotBlank() }?.let { groups.getOrPut(it) { mutableListOf() }.add(r) } }
+    return groups.map { (title, list) ->
+        val parts = list.map { cleanTimes(it.str("subtitle")).split('\u3000').filter { t -> t.isNotBlank() && !t.all { c -> c.isDigit() } } }
+        val times = parts.flatten().filter { TIME_TOKEN.matches(it) }.distinct()
+        val rest = parts.flatten().filter { !TIME_TOKEN.matches(it) }.distinct()
+        val detail = list.firstOrNull { it.str("extra").isNotBlank() }?.str("extra").orEmpty()
+        val head = if (list.size > 1) "共 ${list.size} 則" else ""
+        title to listOf(head, rest.take(3).joinToString("、"), times.firstOrNull().orEmpty()).filter { it.isNotBlank() }.joinToString("\u3000")
+            .let { if (list.size == 1 && detail.isNotBlank() && detail != title) "$it\n$detail".trim() else it }
+    }
+}
+
+private val TIME_TOKEN = Regex("""\d{1,2}/\d{1,2} \d{2}:\d{2}""")
 
 private fun fallbackRows(d: JSONObject): List<Pair<String, String>> {
     val arr = listOf("rows", "items", "stations", "lots", "places").firstNotNullOfOrNull { d.optJSONArray(it) } ?: return emptyList()
@@ -443,20 +507,23 @@ private fun ReservoirRow(i: Int, r: JSONObject) {
     val f by animateFloatAsState(if (go) ((pct ?: 0.0) / 100.0).toFloat().coerceIn(0f, 1f) else 0f, tween(700, easing = EASE), label = "res")
     Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         val local = r.optBoolean("highlight")
-        Text(r.str("name") + if (local) "・本地" else "", style = Type.body.copy(fontWeight = if (local) FontWeight.Bold else FontWeight.Normal), modifier = Modifier.width(96.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Column(Modifier.width(100.dp)) {
+            Text(r.str("name"), style = Type.body.copy(fontWeight = if (local) FontWeight.Bold else FontWeight.Normal), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            if (local) Text("本地", style = Type.kicker.copy(color = Ink.Lacquer))
+        }
         Box(Modifier.weight(1f).height(8.dp).clip(RoundedCornerShape(4.dp)).background(Ink.Hair)) {
             Box(Modifier.fillMaxWidth(f).height(8.dp).clip(RoundedCornerShape(4.dp)).background(if ((pct ?: 100.0) < 30) Ink.Up else Ink.Lacquer))
         }
-        Text(pct?.let { String.format("%.1f%%", it) } ?: "–", style = Type.num, modifier = Modifier.width(64.dp).padding(start = 8.dp))
+        Text(pct?.let { String.format("%.1f%%", it) } ?: "–", style = Type.num.copy(fontSize = 13.sp), maxLines = 1, modifier = Modifier.width(60.dp).padding(start = 8.dp))
     }
 }
 
 @Composable
 private fun FxRow(a: String, b: String, c: String, d: String, e: String, head: Boolean = false) {
-    val st = if (head) Type.small else Type.num.copy(fontSize = 13.sp)
+    val st = if (head) Type.small.copy(fontSize = 11.sp) else Type.num.copy(fontSize = 12.sp)
     Row(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-        Text(a, style = if (head) Type.small else Type.body.copy(fontSize = 13.sp), modifier = Modifier.weight(1.4f), maxLines = 1, overflow = TextOverflow.Ellipsis)
-        listOf(b, c, d, e).forEach { Text(it, style = st, modifier = Modifier.weight(1f), maxLines = 1) }
+        Text(a, style = if (head) Type.small else Type.body.copy(fontSize = 13.sp), modifier = Modifier.weight(1.5f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        listOf(b, c, d, e).forEach { Text(it, style = st, modifier = Modifier.weight(1f), maxLines = 1, softWrap = false) }
     }
 }
 

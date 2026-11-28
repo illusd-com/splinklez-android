@@ -21,7 +21,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
@@ -32,12 +36,32 @@ import androidx.compose.ui.unit.dp
  */
 
 @Composable
-internal fun SpzHead(no: String, title: String, trailing: @Composable () -> Unit = {}) {
+internal fun SpzHead(no: String, title: String, aside: String = "") {
+    // Title on its own line, never squeezed by the aside; the aside (更新時間、城市…) sits under it, then a rule.
+    Column(Modifier.fillMaxWidth()) {
+        Row(verticalAlignment = Alignment.Top) {
+            Text(no, style = Type.section.copy(color = Ink.Lacquer))
+            Spacer(Modifier.width(8.dp))
+            Text(title, style = Type.section, modifier = Modifier.weight(1f))
+        }
+        if (aside.isNotBlank()) {
+            Spacer(Modifier.height(2.dp))
+            Text(aside, style = Type.kicker, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        }
+        Spacer(Modifier.height(6.dp))
+        Box(Modifier.fillMaxWidth().height(1.dp).background(Ink.Ink))
+    }
+}
+
+/** Variant with a short trailing action (e.g. 「防災頁 →」) at the right of the title row. */
+@Composable
+internal fun SpzHead(no: String, title: String, trailing: @Composable () -> Unit) {
     Column(Modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(no, style = Type.section.copy(color = Ink.Lacquer))
             Spacer(Modifier.width(8.dp))
             Text(title, style = Type.section, modifier = Modifier.weight(1f))
+            Spacer(Modifier.width(8.dp))
             trailing()
         }
         Spacer(Modifier.height(6.dp))
@@ -47,19 +71,28 @@ internal fun SpzHead(no: String, title: String, trailing: @Composable () -> Unit
 
 @Composable
 internal fun SpzKicker(label: String, rest: String) {
-    Row {
-        Text(label, style = Type.kicker.copy(color = Ink.Lacquer, fontWeight = FontWeight.Bold))
-        if (rest.isNotBlank()) Text("\u3000$rest", style = Type.kicker)
-    }
+    Text(
+        buildAnnotatedString {
+            withStyle(SpanStyle(color = Ink.Lacquer, fontWeight = FontWeight.Bold)) { append(label) }
+            if (rest.isNotBlank()) append("\u3000$rest")
+        },
+        style = Type.kicker,
+    )
 }
 
 @Composable
-internal fun SpzUnavailable(title: String, message: String) {
+internal fun SpzUnavailable(title: String, message: String, onRetry: (() -> Unit)? = null) {
     val shape = RoundedCornerShape(8.dp)
     Column(Modifier.fillMaxWidth().padding(vertical = 6.dp).border(1.dp, Ink.Hair, shape).padding(16.dp)) {
         Text(title, style = Type.serifBody.copy(fontWeight = FontWeight.Bold))
-        Spacer(Modifier.height(4.dp))
-        Text(message, style = Type.small)
+        if (message.isNotBlank() && message != title) {
+            Spacer(Modifier.height(4.dp))
+            Text(message, style = Type.small)
+        }
+        if (onRetry != null) {
+            Spacer(Modifier.height(10.dp))
+            PressChip("重試", selected = true, onClick = onRetry)
+        }
     }
 }
 
